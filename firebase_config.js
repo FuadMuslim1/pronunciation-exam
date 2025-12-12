@@ -2,13 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBwShyAwMUoenFw5MUebCX_nxGd9Z926BQ",
-    authDomain: "the-examination.firebaseapp.com",
-    projectId: "the-examination",
-    storageBucket: "the-examination.firebasestorage.app",
-    messagingSenderId: "614990640750",
-    appId: "1:614990640750:web:e5420a4beb25e9447d987f",
-    measurementId: "G-H6YH9SXD59"
+  apiKey: "AIzaSyAeEVBmJGaW6jBiQxXFeRLM38DYvlYcwuM",
+  authDomain: "pronunciation-exam-pro.firebaseapp.com",
+  projectId: "pronunciation-exam-pro",
+  storageBucket: "pronunciation-exam-pro.firebasestorage.app",
+  messagingSenderId: "945368789678",
+  appId: "1:945368789678:web:f2abc4395a40776d7e733f",
+  measurementId: "G-0QLP2XWSCT"
 };
 
 // Inisialisasi Firebase
