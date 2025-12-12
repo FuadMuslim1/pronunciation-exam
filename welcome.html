@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Pronunciation Examination</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+    <div class="max-w-3xl w-full text-center space-y-6 fade-in">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">
+            Welcome, <span id="user-name" class="text-emerald-600">Candidate</span>
+        </h1>
+
+        <div class="bg-blue-50 p-6 rounded-xl text-left border border-blue-100">
+            <h3 class="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i> Examination Rules
+            </h3>
+            <ul class="list-disc list-inside space-y-1 text-sm text-blue-800">
+                <li>Do not leave the camera's view during the examination.</li>
+                <li>Microphone must remain active throughout the test.</li>
+                <li>No talking (except reading), looking away, or receiving assistance.</li>
+                <li>Ensure stable internet connection.</li>
+                <li>3 Stages: Tongue Twister, Phonetic Transcription, Reading Text.</li>
+                <li>1 minute limit per stage.</li>
+                <li>Auto-submission when timer runs out.</li>
+            </ul>
+        </div>
+
+        <div class="space-y-4">
+            <p id="status-text" class="text-gray-600 font-medium animate-pulse">Checking Camera & Microphone...</p>
+            
+            <div class="video-wrapper">
+                <video id="preview" autoplay muted playsinline></video>
+                <div class="absolute bottom-2 left-0 w-full text-center">
+                    <span class="bg-black/50 text-white text-xs px-2 py-1 rounded">Live Preview</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-btn" onclick="startExam()" disabled class="btn-primary w-full md:w-auto px-10 py-4 rounded-full text-lg font-bold shadow-lg opacity-50 cursor-not-allowed">
+            Start Exam
+        </button>
+    </div>
+
+    <script type="module">
+        // Import modul otentikasi dan perekam
+        import { requireAuth } from './auth.js';
+        import { initCamera } from './recorder.js';
+        
+        lucide.createIcons();
+        
+        // Memastikan otentikasi dan mendapatkan data pengguna
+        const user = requireAuth();
+        document.getElementById('user-name').textContent = user.username;
+        
+        const videoEl = document.getElementById('preview');
+        const startBtn = document.getElementById('start-btn');
+        const statusText = document.getElementById('status-text');
+
+        // Inisialisasi Kamera saat halaman dimuat
+        (async () => {
+            const success = await initCamera(videoEl);
+            
+            if (success) {
+                statusText.textContent = "System Check Passed. You look great!";
+                statusText.classList.remove('animate-pulse');
+                statusText.classList.add('text-green-600');
+                startBtn.disabled = false;
+                startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                statusText.textContent = "Error: Camera/Microphone blocked. Please allow permissions and refresh.";
+                statusText.classList.add('text-red-500');
+            }
+        })();
+
+        // Fungsi yang dipanggil saat tombol Start Exam diklik
+        window.startExam = function() {
+            window.location.replace('stage_1.html');
+        };
+    </script>
+</body>
+</html>

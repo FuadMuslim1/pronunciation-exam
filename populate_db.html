@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Populate Firestore - Pronunciation Exam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-xl border border-gray-100">
+        
+        <div class="text-center mb-8">
+            <div class="mx-auto w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="database" class="w-6 h-6"></i>
+            </div>
+            <h1 class="text-xl font-bold text-gray-900">Database Seeder</h1>
+            <p class="text-sm text-gray-500 mt-2">Initialize participant credentials</p>
+        </div>
+
+        <div id="status-container" class="space-y-4 mb-6 hidden">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="status-text" class="text-xs text-center text-gray-600 font-mono">Ready to start...</p>
+        </div>
+
+        <div id="log-area" class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs font-mono h-48 overflow-y-auto mb-6 hidden shadow-inner"></div>
+
+        <button id="run-btn" class="w-full bg-gray-900 hover:bg-black text-white font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>Populate Firestore Database</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+        </button>
+
+        <p id="completion-msg" class="hidden text-center text-green-600 font-medium mt-4 flex items-center justify-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            <span>Operation Completed Successfully</span>
+        </p>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        lucide.createIcons();
+
+        // Data Source
+        const users = [
+            {"username": "Hilman Nur", "password": "Kediri, February 11, 2018"},
+            {"username": "Elen Kustiawardani", "password": "Blitar, September 1, 2006"},
+            {"username": "Andik Ibnu Ramadani", "password": "Magetan, October 17, 2004"},
+            {"username": "Trio Kusuma Hari Utami", "password": "Jombang, June 16, 1999"},
+            {"username": "Ollivia Niken Anggraini", "password": "Ponorogo, April 8, 2008"},
+            {"username": "Afifah Nazhiifah", "password": "Batam, August 23, 2002"},
+            {"username": "Dhiya Firyal Muthi'", "password": "Tegal, July 31, 2008"},
+            {"username": "Angga Aprianto", "password": "Jambi, April 5, 2005"},
+            {"username": "Adzra Naila Najihah Krisna", "password": "Pagar Alam, March 17, 2008"},
+            {"username": "Andi Aisyah Muthmainnah", "password": "Pangkep, March 30, 2007"},
+            {"username": "Rahmattia Anzilla Nurhalija", "password": "Merauke, January 23, 2007"},
+            {"username": "Nur Fitasari", "password": "Canik, July 8, 2000"},
+            {"username": "Milka Ulin Simarmata", "password": "Simarmata, October 16, 2005"},
+            {"username": "Margaretha Ariani Mulyono", "password": "Jakarta, December 4, 2007"},
+            {"username": "Maulana Habib", "password": "Medan, December 12, 2005"},
+            {"username": "Anastasia Rugun Christiany", "password": "Jakarta, May 7, 1997"},
+            {"username": "Muthia Syafitri", "password": "Padang, November 19, 2004"},
+            {"username": "Dina Maiatul Farihah", "password": "Jakarta, May 5, 2003"},
+            {"username": "Rahmatul Aini", "password": "Medan, November 20, 2004"},
+            {"username": "Dimas Apriliando Fahreza", "password": "Tanjung Mulia, April 23, 2004"},
+            {"username": "Rut Pebrina Tesalonika Br Siburian", "password": "Medan, February 10, 2000"},
+            {"username": "Natasya Ayuka Mutiara Zudya", "password": "Gisting, April 25, 2009"}
+        ];
+
+        // Config (PENTING: Ganti dengan konfigurasi Anda yang sebenarnya!)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBwShyAwMUoenFw5MUebCX_nxGd9Z926BQ",
+            authDomain: "the-examination.firebaseapp.com",
+            projectId: "the-examination",
+            storageBucket: "the-examination.firebasestorage.app",
+            messagingSenderId: "614990640750",
+            appId: "1:614990640750:web:e5420a4beb25e9447d987f",
+            measurementId: "G-H6YH9SXD59"
+        };
+
+        // Init Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // UI Elements
+        const btn = document.getElementById('run-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status-text');
+        const statusContainer = document.getElementById('status-container');
+        const logArea = document.getElementById('log-area');
+        const completionMsg = document.getElementById('completion-msg');
+
+        /**
+         * Menambahkan pesan ke area log.
+         * @param {string} msg Pesan log.
+         * @param {string} type Tipe pesan ('info', 'success', 'error').
+         */
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.textContent = `> ${msg}`;
+            if(type === 'error') div.classList.add('text-red-400');
+            if(type === 'success') div.classList.add('text-green-400');
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            statusContainer.classList.remove('hidden');
+            logArea.classList.remove('hidden');
+
+            let processed = 0;
+            let added = 0;
+            let skipped = 0;
+            let errors = 0;
+            
+            log('Starting batch operation...');
+            
+            // Proses setiap pengguna
+            for (const user of users) {
+                try {
+                    // Membuat docId yang bersih dari username (digunakan sebagai ID dokumen)
+                    const docId = user.username.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                    const docRef = db.collection('users').doc(docId);
+                    
+                    // Cek apakah dokumen sudah ada
+                    const doc = await docRef.get();
+                    
+                    if (!doc.exists) {
+                        // Tambahkan data baru
+                        await docRef.set({
+                            username: user.username,
+                            password: user.password,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        log(`Added: ${user.username}`, 'success');
+                        added++;
+                    } else {
+                        // Lewati jika sudah ada
+                        log(`Exists: ${user.username}`, 'info');
+                        skipped++;
+                    }
+                } catch (e) {
+                    log(`Error on ${user.username}: ${e.message}`, 'error');
+                    errors++;
+                }
+
+                // Update Progress Bar
+                processed++;
+                const percentage = Math.round((processed / users.length) * 100);
+                progressBar.style.width = `${percentage}%`;
+                statusText.textContent = `Processed ${processed}/${users.length}`;
+            }
+
+            // Final Tally
+            log('--------------------------------');
+            log(`Complete. Added: ${added}, Skipped: ${skipped}, Errors: ${errors}`);
+
+            // UI Completion
+            completionMsg.classList.remove('hidden');
+            btn.innerHTML = `<span>Run Again</span> <i data-lucide="refresh-cw" class="w-4 h-4"></i>`;
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 3 - Reading Text</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <header class="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-20">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-emerald-700">Stage 3</span>
+            <span class="text-xs text-gray-400">|</span>
+            <span class="text-sm text-gray-600">Reading Text</span>
+        </div>
+        <div class="timer-badge">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            <span id="timer">01:00</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-start p-4 w-full max-w-2xl mx-auto space-y-6">
+        
+        <div id="status-container" class="w-full text-center text-sm font-medium text-emerald-600 animate-pulse">
+            Recording in progress...
+        </div>
+
+        <div class="video-wrapper">
+            <video id="camera-preview" autoplay muted playsinline></video>
+        </div>
+
+        <div class="content-box w-full">
+            <h2 class="text-xs font-bold text-gray-400 uppercase mb-2">Read the Passage</h2>
+            <p class="text-base md:text-lg font-serif text-gray-800 leading-relaxed">
+                <strong>Sam’s Quick English Tips</strong><br /><br />
+                Sam wanted to learn English fast, so he followed a few tips his teacher suggested. First, he practiced ending sounds. He read words like books, lessons, and friends, and noticed that the little “s” sound made his speech clearer. Then he tried past tense. He said worked, played, and wanted. He realized “-ed” endings sounded different but still mattered.<br />
+                His teacher said, “Don’t worry, it gets easier when you listen.”<br />
+                Sam also learned about the American T. He noticed how water, better, and city sounded softer, almost like “d.” He started linking up words: going to read it, want to try it.<br />
+                He told himself, “I’m not going to quit. I’ll keep practicing every day.”<br />
+                And little by little, Sam’s English skills improved—he watched shows, asked questions, and smiled when people said, “Hey, you sound better now!”
+            </p>
+        </div>
+
+        <button id="next-btn" class="btn-primary w-full py-3 rounded-xl font-medium shadow-md">
+            Submit Examination
+        </button>
+    </main>
+
+    <script type="module">
+        // Import modul
+        import { requireAuth } from './auth.js';
+        import { initCamera, startRecording, stopRecordingAndSave, startTimer } from './recorder.js';
+        
+        lucide.createIcons();
+        requireAuth(); // Pastikan pengguna sudah login
+
+        const videoEl = document.getElementById('camera-preview');
+        const timerEl = document.getElementById('timer');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Durasi ujian stage 3 (60 detik)
+        const EXAM_DURATION = 60; 
+
+        /**
+         * Fungsi untuk menginisialisasi kamera, perekaman, dan timer.
+         */
+        async function init() {
+            const hasCam = await initCamera(videoEl);
+            if(hasCam) {
+                startRecording();
+                // Memulai timer, memanggil finishStage ketika waktu habis
+                startTimer(EXAM_DURATION, timerEl, finishStage);
+            } else {
+                // Tampilkan pesan error jika kamera gagal
+                document.getElementById('status-container').textContent = "Camera error. Cannot proceed.";
+            }
+        }
+
+        /**
+         * Fungsi yang dipanggil saat stage selesai (waktu habis atau tombol Submit diklik).
+         */
+        async function finishStage() {
+            // Menonaktifkan tombol dan menampilkan status menyimpan
+            nextBtn.disabled = true;
+            nextBtn.textContent = "Finalizing...";
+            document.getElementById('status-container').textContent = "Saving final video and preparing submission...";
+            
+            // Menghentikan perekaman dan menyimpan video ke IndexedDB
+            await stopRecordingAndSave('stage3_video');
+            
+            // Redirect ke halaman unduhan (submission dashboard)
+            window.location.replace('download_page.html');
+        }
+
+        // Menambahkan event listener ke tombol Submit Examination
+        nextBtn.addEventListener('click', finishStage);
+        
+        // Memulai semua proses
+        init();
+    </script>
+</body>
+</html>

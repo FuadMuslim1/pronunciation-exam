@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Pronunciation Examination</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="flex items-center justify-center p-4 bg-gray-50">
+    <div class="glass-panel w-full max-w-md p-8 rounded-2xl fade-in">
+        <div class="text-center mb-10">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Examination Login</h1>
+            <p class="text-gray-500 text-sm">Please enter your candidate credentials</p>
+        </div>
+
+        <form id="login-form" class="space-y-6">
+            <div class="space-y-2 delay-100 fade-in">
+                <label class="text-sm font-medium text-gray-700 ml-1">Username</label>
+                <div class="relative">
+                    <input type="text" id="username" class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Hilman Nur" required>
+                    <i data-lucide="user" class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"></i>
+                </div>
+            </div>
+
+            <div class="space-y-2 delay-200 fade-in">
+                <label class="text-sm font-medium text-gray-700 ml-1">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="Place, Month DD, YYYY" required>
+                    <i data-lucide="lock" class="w-5 h-5 text-gray-400 absolute left-3 top-3.5"></i>
+                </div>
+            </div>
+
+            <div id="error-msg" class="hidden text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-100"></div>
+
+            <button type="submit" class="w-full btn-primary py-3.5 rounded-xl font-medium shadow-lg flex items-center justify-center gap-2 delay-300 fade-in">
+                <span>Start Examination</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        // Import fungsi otentikasi dari auth.js
+        import { login, saveSession, getSession } from './auth.js';
+        
+        // Inisialisasi ikon Lucide
+        lucide.createIcons();
+
+        // Redirect jika pengguna sudah login
+        if(getSession()) {
+            window.location.replace('welcome.html');
+        }
+
+        const form = document.getElementById('login-form');
+        const errorMsg = document.getElementById('error-msg');
+        const btn = form.querySelector('button');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Simpan teks asli tombol untuk reset
+            const originalText = btn.innerHTML;
+            
+            // Tampilkan status loading
+            btn.innerHTML = `<span class="animate-pulse">Verifying...</span>`;
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            // Panggil fungsi login
+            const result = await login(username, password);
+
+            if (result.success) {
+                // Login berhasil, simpan sesi dan redirect
+                saveSession(result.user);
+                window.location.replace('welcome.html');
+            } else {
+                // Login gagal, tampilkan pesan error
+                errorMsg.textContent = result.error;
+                errorMsg.classList.remove('hidden');
+                
+                // Reset tombol
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons(); // Re-render ikon setelah innerHTML diubah
+            }
+        });
+    </script>
+</body>
+</html>

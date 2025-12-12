@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Break 2</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .btn-primary {
+            background-color: #2563eb !important; /* Blue-600 */
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1d4ed8 !important; /* Blue-700 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center bg-blue-50 p-6">
+    
+    <div class="fade-in max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-blue-100">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2 text-center">Break & Preparation</h1>
+        <p class="text-gray-500 text-center mb-6">Stage 2 Completed. One final stage.</p>
+
+        <div class="bg-gray-50 p-5 rounded-xl mb-8 border border-gray-200">
+            <h3 class="font-bold text-gray-900 mb-3">Rules for Stage 3:</h3>
+            <ul class="list-disc list-inside space-y-2 text-sm text-gray-700">
+                <li>Duration: 1 minute.</li>
+                <li>Camera/Mic resumes immediately.</li>
+                <li>Maintain focus.</li>
+                <li>Task: <strong>Reading Text (Sam's Tips)</strong>.</li>
+            </ul>
+        </div>
+
+        <p class="text-center text-blue-700 font-medium mb-4">
+            Click 'Start' when you are ready.
+        </p>
+
+        <button onclick="next()" class="btn-primary w-full py-4 rounded-xl font-bold shadow-lg">
+            Start Final Stage
+        </button>
+    </div>
+
+    <script type="module">
+        // Import modul otentikasi
+        import { requireAuth } from './auth.js';
+        
+        lucide.createIcons();
+        requireAuth(); // Pastikan pengguna sudah login
+
+        // Fungsi yang dipanggil saat tombol Start Final Stage diklik
+        window.next = function() {
+            window.location.replace('stage_3.html');
+        }
+    </script>
+</body>
+</html>

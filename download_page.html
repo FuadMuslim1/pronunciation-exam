@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete - Download Videos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white p-6 relative">
+    
+    <div class="relative z-10 max-w-lg w-full text-center fade-in space-y-8">
+        
+        <div class="inline-flex items-center justify-center w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full ring-1 ring-emerald-500/50 mb-2">
+            <i data-lucide="check-circle" class="w-12 h-12"></i>
+        </div>
+
+        <h1 class="text-3xl font-bold">Examination Complete</h1>
+        <p class="text-gray-400">Please download your recording files below and submit them to your tutor.</p>
+        
+        <div class="space-y-4">
+            <button id="dl-1" disabled class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-4 rounded-xl flex items-center justify-between px-6 transition-colors">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="video" class="w-5 h-5 text-emerald-400"></i>
+                    Stage 1 Recording
+                </span>
+                <i data-lucide="download" class="w-5 h-5"></i>
+            </button>
+            <button id="dl-2" disabled class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-4 rounded-xl flex items-center justify-between px-6 transition-colors">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="video" class="w-5 h-5 text-emerald-400"></i>
+                    Stage 2 Recording
+                </span>
+                <i data-lucide="download" class="w-5 h-5"></i>
+            </button>
+            <button id="dl-3" disabled class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-4 rounded-xl flex items-center justify-between px-6 transition-colors">
+                <span class="flex items-center gap-3">
+                    <i data-lucide="video" class="w-5 h-5 text-emerald-400"></i>
+                    Stage 3 Recording
+                </span>
+                <i data-lucide="download" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="pt-8 border-t border-white/10 mt-8">
+            <p class="text-sm text-gray-500 mb-4">Finished downloading all files?</p>
+            <button onclick="logout()" class="text-red-400 hover:text-red-300 font-medium flex items-center justify-center gap-2 mx-auto">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                <span>Sign Out & Clear Data</span>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import modul
+        import { requireAuth, clearSession } from './auth.js';
+        import { getVideo, clearVideos } from './idb.js';
+        
+        lucide.createIcons();
+        const user = requireAuth(); // Pastikan otentikasi
+        
+        // Konfigurasi stage video
+        const stages = [
+            { id: 'dl-1', key: 'stage1_video', suffix: '_stage1' },
+            { id: 'dl-2', key: 'stage2_video', suffix: '_stage2' },
+            { id: 'dl-3', key: 'stage3_video', suffix: '_stage3' }
+        ];
+
+        /**
+         * Mengambil video dari IndexedDB dan menyiapkan fungsi unduhan untuk tombol.
+         */
+        async function setupDownloads() {
+            for (const stage of stages) {
+                const btn = document.getElementById(stage.id);
+                
+                try {
+                    const blob = await getVideo(stage.key);
+                    
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        
+                        // Aktifkan tombol dan atur fungsi unduhan
+                        btn.disabled = false;
+                        btn.onclick = () => {
+                            const a = document.createElement('a');
+                            a.href = url;
+                            // Nama file: [username]_[stage].webm
+                            a.download = `${user.username.replace(/\s+/g, '_')}${stage.suffix}.webm`;
+                            
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            // Opsional: Bebaskan URL object setelah unduhan dimulai (cleanup)
+                            // URL.revokeObjectURL(url); 
+                        };
+
+                        // Visual update
+                        const icon = btn.querySelector('i[data-lucide="download"]');
+                        if(icon) icon.classList.add('text-emerald-400');
+                    } else {
+                        // Jika video tidak ditemukan di IndexedDB
+                        btn.innerHTML = `<span class="text-red-400">Recording Not Found</span>`;
+                    }
+                } catch (e) {
+                    console.error("Error loading video", e);
+                    btn.innerHTML = `<span class="text-red-400">Loading Error</span>`;
+                }
+            }
+        }
+
+        /**
+         * Fungsi untuk logout, membersihkan IndexedDB, dan sesi.
+         */
+        window.logout = async function() {
+            const confirmed = confirm("Are you sure you want to sign out? This will clear all video recordings from your device.");
+            if (confirmed) {
+                await clearVideos(); // Bersihkan IndexedDB
+                clearSession(); // Bersihkan sessionStorage
+                window.location.replace('index.html'); // Kembali ke halaman login
+            }
+        }
+        
+        // Mulai menyiapkan tombol unduhan
+        setupDownloads();
+    </script>
+</body>
+</html>

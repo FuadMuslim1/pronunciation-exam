@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 2 - Phonetic</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <header class="bg-white border-b px-4 py-3 flex justify-between items-center sticky top-0 z-20">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-emerald-700">Stage 2</span>
+            <span class="text-xs text-gray-400">|</span>
+            <span class="text-sm text-gray-600">Phonetic Reading</span>
+        </div>
+        <div class="timer-badge">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            <span id="timer">01:00</span>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-start p-4 w-full max-w-2xl mx-auto space-y-6">
+        
+        <div id="status-container" class="w-full text-center text-sm font-medium text-emerald-600 animate-pulse">
+            Recording in progress...
+        </div>
+
+        <div class="video-wrapper">
+            <video id="camera-preview" autoplay muted playsinline></video>
+        </div>
+
+        <div class="content-box w-full">
+            <h2 class="text-xs font-bold text-gray-400 uppercase mb-2">Read the IPA Text</h2>
+            <p class="text-lg font-serif text-gray-800 leading-loose">
+                sæmz kwɪk ˈɪŋɡlɪʃ tɪps<br /><br />
+                sæm ˈwɔntɪd tu lɜrn ˈɪŋɡlɪʃ fæst, soʊ hi ˈfɑloʊd ə fju tɪps hɪz ˈtiʧər səɡˈʤɛstɪd.<br />
+                fɜrst, hi ˈpræktɪst ˈɛndɪŋ saʊndz. hi rid wɜrdz laɪk bʊks, ˈlɛsənz, ænd frɛndz, ænd ˈnoʊtəst ðæt ðə ˈlɪtəl “ɛs” saʊnd meɪd hɪz spiʧ ˈklɪrər. ðɛn hi traɪd pæst tɛns. hi sɛd wɜrkt, pleɪd, ænd ˈwɔntɪd. hi ˈriəˌlaɪzd “-i di” ˈɛndɪŋz ˈsaʊndɪd ˈdɪfrənt bʌt stɪl ˈmætərd.<br />
+                hɪz ˈtiʧər sɛd, “doʊnt ˈwɜri, ɪt ɡɛts ˈiziər wɛn ju ˈlɪsən.”<br />
+                sæm ˈɔlsoʊ lɜrnd əˈbaʊt ði əˈmɛrɪkən ti. hi ˈnoʊtəst haʊ ˈwɔtər, ˈbɛtər, ænd ˈsɪti ˈsaʊndɪd ˈsɔftər, ˈɔlˌmoʊst laɪk “dəh.” hi ˈstɑrtɪd ˈlɪŋkɪŋ ʌp wɜrdz: ˈɡoʊɪŋ tu rid ɪt, wɑnt tu traɪ ɪt.<br />
+                hi toʊld hɪmˈsɛlf, “aɪm nɑt ˈɡoʊɪŋ tu kwɪt. aɪl kip ˈpræktəsɪŋ ˈɛvri deɪ.”<br />
+                ænd ˈlɪtəl baɪ ˈlɪtəl, sæmz ˈɪŋɡlɪʃ skɪlz ɪmˈpruvd-hi wɑʧt ʃoʊz, æskt ˈkwɛsʧənz, ænd smaɪld wɛn ˈpipəl sɛd, “heɪ, ju saʊnd ˈbɛtər naʊ!”
+            </p>
+        </div>
+
+        <button id="next-btn" class="btn-primary w-full py-3 rounded-xl font-medium shadow-md">
+            Next Stage
+        </button>
+    </main>
+
+    <script type="module">
+        // Import modul
+        import { requireAuth } from './auth.js';
+        import { initCamera, startRecording, stopRecordingAndSave, startTimer } from './recorder.js';
+        
+        lucide.createIcons();
+        requireAuth(); // Pastikan pengguna sudah login
+
+        const videoEl = document.getElementById('camera-preview');
+        const timerEl = document.getElementById('timer');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // Durasi ujian stage 2 (60 detik)
+        const EXAM_DURATION = 60; 
+
+        /**
+         * Fungsi untuk menginisialisasi kamera, perekaman, dan timer.
+         */
+        async function init() {
+            const hasCam = await initCamera(videoEl);
+            if(hasCam) {
+                startRecording();
+                // Memulai timer, memanggil finishStage ketika waktu habis
+                startTimer(EXAM_DURATION, timerEl, finishStage);
+            } else {
+                // Tampilkan pesan error jika kamera gagal
+                document.getElementById('status-container').textContent = "Camera error. Cannot proceed.";
+            }
+        }
+
+        /**
+         * Fungsi yang dipanggil saat stage selesai (waktu habis atau tombol Next diklik).
+         */
+        async function finishStage() {
+            // Menonaktifkan tombol dan menampilkan status menyimpan
+            nextBtn.disabled = true;
+            nextBtn.textContent = "Saving...";
+            document.getElementById('status-container').textContent = "Saving video...";
+            
+            // Menghentikan perekaman dan menyimpan video ke IndexedDB
+            await stopRecordingAndSave('stage2_video');
+            
+            // Redirect ke halaman istirahat berikutnya
+            window.location.replace('break_page_1.html');
+        }
+
+        // Menambahkan event listener ke tombol Next Stage
+        nextBtn.addEventListener('click', finishStage);
+        
+        // Memulai semua proses
+        init();
+    </script>
+</body>
+</html>
